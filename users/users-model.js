@@ -17,15 +17,15 @@ function findById(id) {
     .first("id", "username");
 }
 
-function add(user) {
-  user.password = bcrypt.hash(user.password, 16);
-  const [id] = db("users").insert(user);
-  return findById(id);
+async function add(user) {
+  user.password = await bcrypt.hash(user.password, 16)
+  const [id] = await db("users").insert(user)
+  return findById(id)
 }
 
 module.exports = {
   find,
   findBy,
   findById,
-  add
+  add,
 };
