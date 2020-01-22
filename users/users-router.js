@@ -3,8 +3,8 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const secret = require("./config/secrets");
 const userModel = require("./users-model");
+const validateToken = require("./config/auth-middleware");
 const router = express.Router();
-
 
 function generateToken(user) {
   const payload = {
@@ -17,33 +17,13 @@ function generateToken(user) {
   return jwt.sign(payload, secret.jwtSecret, options);
 }
 
-router.get("/users", (req, res, next) => {
-  const authorization = req.headers.authorization
-
-  if(authorization) {
-    jwt.verify(authorization, secret, (err, decodedToken) => {
-      if (err) {
-        res.json(err)
-      } else {
-        req.decodedToken = decodedToken
-  
-        .then(users => {
-          userModel
-        .find()
-          res.json(users);
-        })
-        .catch(err => {
-          res.json(err);
-        });
-        next()
-      }
-    })
-  } else {
-    res.status(400).json({
-      message: 'no token provided'
-    })
-  }
-})
+router.get("/users", (req, res) => {
+  userModel.find()
+  .then(users => {
+    res.send(users);
+  })
+  .catch(err => res.json(err));
+});
 
 router.post("/register", async (req, res, next) => {
   try {
@@ -56,7 +36,7 @@ router.post("/register", async (req, res, next) => {
 
 router.post("/login", async (req, res, next) => {
   try {
-    const { username, password} = req.headers;
+    const { username, password } = req.headers;
     const user = await userModel.findBy({ username }).first();
     const passwordValid = await bcrypt.compare(password, user.password);
     if (user && passwordValid) {
