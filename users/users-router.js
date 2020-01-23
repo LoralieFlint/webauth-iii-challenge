@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const secret = require("./config/secrets");
 const userModel = require("./users-model");
 const validateToken = require("./config/auth-middleware");
+
 const router = express.Router();
 
 function generateToken(user) {
@@ -17,14 +18,14 @@ function generateToken(user) {
   return jwt.sign(payload, secret.jwtSecret, options);
 }
 
-router.get("/users", (req, res) => {
-  userModel.find()
-  .then(users => {
-    res.send(users);
-  })
-  .catch(err => res.json(err));
+router.get("/users", validateToken, (req, res) => {
+  userModel
+    .find()
+    .then(users => {
+      res.send(users);
+    })
+    .catch(err => res.json(err));
 });
-
 router.post("/register", async (req, res, next) => {
   try {
     const saved = await userModel.add(req.body);
@@ -54,5 +55,4 @@ router.post("/login", async (req, res, next) => {
     next(err);
   }
 });
-
 module.exports = router;
